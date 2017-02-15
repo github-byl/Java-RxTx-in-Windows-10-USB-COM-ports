@@ -1,12 +1,12 @@
 /*
 	Copyright 2017 Brian Yao Li
-
+	
 	Licensed under the Apache License, Version 2.0 (the "License");
 	you may not use this file except in compliance with the License.
 	You may obtain a copy of the License at
-
-    	http://www.apache.org/licenses/LICENSE-2.0
-
+	
+		http://www.apache.org/licenses/LICENSE-2.0
+	
 	Unless required by applicable law or agreed to in writing, software
 	distributed under the License is distributed on an "AS IS" BASIS,
 	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -64,46 +64,39 @@ public class Win10RxTx {
 	 * @throws Exception
 	 */
 	public void connect ( String portName ) throws Exception
-    {
-        CommPortIdentifier portIdentifier = CommPortIdentifier
-        		.getPortIdentifier(portName);
-        if ( portIdentifier.isCurrentlyOwned() )
-        {
-        	//the port may have already open and usable
-        	return;
-        }
-        else
-        {
-            CommPort commPort = portIdentifier.open(this.getClass().getName(),
-            		2000);
-            
-            if ( commPort instanceof SerialPort )
-            {
-                serialPort = (SerialPort) commPort;
-                serialPort.setSerialPortParams(9600,	//57600,
-                		SerialPort.DATABITS_8,
-                		SerialPort.STOPBITS_1,
-                		SerialPort.PARITY_NONE);
-                
-                //wasted me days to find out this -- we must have the following 
-                //two lines to make rx work!!!
-                serialPort.setFlowControlMode(SerialPort.FLOWCONTROL_RTSCTS_IN);
-                serialPort.setRTS(true);
-                
-                in = serialPort.getInputStream();
-                out = serialPort.getOutputStream();
-                
-                //let the worker thread to read the port continuously
-                readThread = new Thread(new SerialReader(in));
-                readThread.start();
-            }
-            else
-            {
-                throw new Exception("Error: Only serial ports are "
-                		+ "handled by this example.");
-            }
-        }     
-    }
+	{
+		CommPortIdentifier portIdentifier = CommPortIdentifier
+				.getPortIdentifier(portName);
+		if ( portIdentifier.isCurrentlyOwned() ) {
+			//the port may have already open and usable
+			return;
+		} else {
+			CommPort commPort = portIdentifier.open(this.getClass().getName(),
+					2000);
+			if ( commPort instanceof SerialPort ) {
+				serialPort = (SerialPort) commPort;
+				serialPort.setSerialPortParams(9600,	//57600,
+						SerialPort.DATABITS_8,
+						SerialPort.STOPBITS_1,
+						SerialPort.PARITY_NONE);
+	
+				//wasted me days to find out this -- we must have the following 
+				//two lines to make rx work!!!
+				serialPort.setFlowControlMode(SerialPort.FLOWCONTROL_RTSCTS_IN);
+				serialPort.setRTS(true);
+	
+				in = serialPort.getInputStream();
+				out = serialPort.getOutputStream();
+	
+				//let the worker thread to read the port continuously
+				readThread = new Thread(new SerialReader(in));
+				readThread.start();
+			} else {
+				throw new Exception("Error: Only serial ports are "
+						+ "handled by this example.");
+			}
+		}     
+	}
 	
 	/**
 	 * Close a connection and release all resources if it is the last one
@@ -151,7 +144,7 @@ public class Win10RxTx {
 			serialPort = null;
 		}	
 		return 0;
- 	}
+	}
 	
 	/**
 	 * Close all connections
@@ -221,89 +214,83 @@ public class Win10RxTx {
 	 * add the result to the list. Can be interrupted externally
 	 */
 	private static class SerialReader implements Runnable {
-        InputStream in;
-        
-        public SerialReader ( InputStream in ) {
-            this.in = in;
-        }
-        
-        @Override
-        public void run () {
-            byte[] buffer = new byte[1024];
-            int len = -1;
-            byte[] data = new  byte[512];
-            int dataIndex = 0;
-            try {
-                while ( true ) {
-                	//read the input stream and decide if break and continue
-                	len = this.in.read(buffer);
-                	if (len < 0 || Thread.interrupted()) {
-                		break;
-                	} else if (len==0) {
-                		Thread.sleep(100);
-                		continue;
-                	} 
-                	
-                	//meaningful data read, so parse the data
-            		for (int i = 0; i < len; i++) {
-            			byte currentByte = buffer[i];
-            			//ignore NUL and LF
-            			if ((currentByte != NUL) && (currentByte != LF)) {
-            				//CR is the delimiter
-            				if (currentByte==CR) {
-            					if (dataIndex != 0) {
-            						//received one complete string, save it
-            						addToList(new String(data, 0, dataIndex, 
-            								StandardCharsets.UTF_8));
-            						dataIndex = 0;	//ready for the next string
-            					}
-            				} else {
-            					data[dataIndex++] = currentByte;
-            				}
-            			}
-            		}
-
-                }
-            } catch ( IOException e ) {
-                e.printStackTrace();
-            } catch (InterruptedException e) {
+		InputStream in;
+	    
+		public SerialReader ( InputStream in ) {
+			this.in = in;
+		}
+	    
+		@Override
+		public void run () {
+			byte[] buffer = new byte[1024];
+			int len = -1;
+			byte[] data = new  byte[512];
+			int dataIndex = 0;
+			try {
+				while ( true ) {
+					//read the input stream and decide if break and continue
+					len = this.in.read(buffer);
+					if (len < 0 || Thread.interrupted()) {
+						break;
+					} else if (len==0) {
+						Thread.sleep(100);
+						continue;
+					} 
+					
+					//meaningful data read, so parse the data
+					for (int i = 0; i < len; i++) {
+						byte currentByte = buffer[i];
+						//ignore NUL and LF
+						if ((currentByte != NUL) && (currentByte != LF)) {
+							//CR is the delimiter
+							if (currentByte==CR) {
+								if (dataIndex != 0) {
+									//received one complete string, save it
+									addToList(new String(data, 0, dataIndex,
+											StandardCharsets.UTF_8));
+									dataIndex = 0;	//ready for the next string
+								}
+							} else {
+								data[dataIndex++] = currentByte;
+							}
+						}
+					}
+					
+				}
+			} catch ( IOException e ) {
+			    e.printStackTrace();
+			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}            
-        }
-    }
+		}
+	}
 	
 	/**
 	 * @author liy
 	 * Worker thread to write data to the port until finished 
 	 * Can be interrupted externally
 	 */
-	private static class SerialWriter implements Runnable 
-    {
-        OutputStream out;
-        byte[] data;
-        
-        public SerialWriter ( OutputStream out, byte[] data )
-        {
-            this.out = out;
-            this.data = data;
-        }
-        
-        @Override
-        public void run ()
-        {
-            try
-            {                
-            	for (int i = 0; i < data.length; i++) {
-            		if (Thread.interrupted()) break;
-            		this.out.write(data[i]);
-            	}
-            	this.out.flush();
-            }
-            catch ( IOException e )
-            {
-                e.printStackTrace();
-            }            
-        }
-    }
+	private static class SerialWriter implements Runnable {
+		OutputStream out;
+		byte[] data;
+		
+		public SerialWriter ( OutputStream out, byte[] data ) {
+			this.out = out;
+			this.data = data;
+		}
+		
+		@Override
+		public void run () {
+			try {                
+				for (int i = 0; i < data.length; i++) {
+					if (Thread.interrupted()) break;
+					this.out.write(data[i]);
+				}
+				this.out.flush();
+			} catch ( IOException e ) {
+				e.printStackTrace();
+			}            
+		}
+	}
 
 }

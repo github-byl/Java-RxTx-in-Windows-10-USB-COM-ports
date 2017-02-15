@@ -1,12 +1,12 @@
 /*
 	Copyright 2017 Brian Yao Li
-
+	
 	Licensed under the Apache License, Version 2.0 (the "License");
 	you may not use this file except in compliance with the License.
 	You may obtain a copy of the License at
-
-    	http://www.apache.org/licenses/LICENSE-2.0
-
+	
+		http://www.apache.org/licenses/LICENSE-2.0
+	
 	Unless required by applicable law or agreed to in writing, software
 	distributed under the License is distributed on an "AS IS" BASIS,
 	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,13 +22,13 @@ import java.util.Date;
 
 public class Win10RxTxTest {
 
-    public static void main ( String[] args )
-    {
+	public static void main ( String[] args ) {
 		Win10RxTx rxtx = new Win10RxTx();
 		
 		try {
 			rxtx.connect("COM3");
-			
+		
+			//Define a working thread to read RxTx and display in the console
 			Thread readData = new Thread(new Runnable() {
 				@Override
 				public void run() {
@@ -42,7 +42,7 @@ public class Win10RxTxTest {
 							//the real-time when data arrived
 							System.out.println(
 									(new SimpleDateFormat(" {HH:mm:ss}"))
-										.format(new Date()));
+									.format(new Date()));
 						} else {
 							try {
 								Thread.sleep(100);
@@ -54,28 +54,30 @@ public class Win10RxTxTest {
 				}				
 			});
 			readData.start();
-			
+		
+			//Define a input thread to get input from the user and send to RxTx
 			Thread userInput = new Thread(new Runnable() {
 				@Override
 				public void run() {
-	                int c = 0;
-	                byte[] buf = new byte[1204];
-	                try {
+					int c = 0;
+					byte[] buf = new byte[1204];
+					try {
 						while ( ( c = System.in.read(buf)) > -1 )
 						{
 							if (Thread.interrupted()) break;
-						    if (c > 0) {
-						    	if (c==5 && buf[0]=='-' 
-						    			&& buf[1]=='-' && buf[2]=='-') {
-						    		break;
-						    	}
-						    	if (c==5 && buf[0]=='+' 
-						    			&& buf[1]=='+' && buf[2]=='+') {
-						    		c = 3;
-						    	}
-						    	rxtx.write(Arrays.copyOf(buf, c));
-						    }		              
-							               
+							//"---" is a string to terminate the program
+							if (c > 0) {
+								if (c==5 && buf[0]=='-' 
+										&& buf[1]=='-' && buf[2]=='-') {
+									break;
+								}
+								//"+++" is a special string sent to RxTx
+								if (c==5 && buf[0]=='+' 
+										&& buf[1]=='+' && buf[2]=='+') {
+									c = 3;
+								}
+								rxtx.write(Arrays.copyOf(buf, c));
+							}		              								               
 						}
 					} catch (IOException e) {
 						e.printStackTrace();
@@ -84,6 +86,8 @@ public class Win10RxTxTest {
 			});
 			userInput.start();
 			
+			//Normally the program is terminated by the user
+			//so we wait for the input thread to finish
 			userInput.join();
 			readData.interrupt();
 			readData.join();
@@ -91,8 +95,9 @@ public class Win10RxTxTest {
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
-			rxtx.close();			
+			//close RxTx to release all resources
+			rxtx.close();	
 			System.out.println("Finished!");
 		}
-    }
+	}
 }
