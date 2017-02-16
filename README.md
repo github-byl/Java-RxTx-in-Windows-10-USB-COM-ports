@@ -16,7 +16,7 @@ limitations under the License.
 ----------------
 This is a working example of Java RxTx in Windows 10 with USB virtual COM ports.
 
-Java is platform-dependent. It can work in Windows, MacOS, Linux, and even embedded systems like Raspberry Pi. This feature of Java, however, makes it difficult to work with UART (Universal Asynchronous Receiver and Transmitter), which is hardware dependent. The RxTx library was developed to tackle this problem and has been proven very useful (http://rxtx.qbang.org/wiki/index.php/Main_Page).
+Java is platform-independent. It can work in Windows, MacOS, Linux, and even embedded systems like Raspberry Pi. This feature of Java, however, makes it difficult to work with UART (Universal Asynchronous Receiver and Transmitter), which is hardware dependent. The RxTx library was developed to tackle this problem and has been proven very useful (http://rxtx.qbang.org/wiki/index.php/Main_Page).
 
 We are working on a project in which the Raspberry Pi would communicate with a ZigBee coordinator via UART. To start with, we tried the RxTx in a Windows 10 computer. The RxTx for x64 compiled binaries can be downloaded from Mfizz RxTx page (http://fizzed.com/oss/rxtx-for-java). The starting point is one of the code examples, "Two way communication with the serial port".
 
